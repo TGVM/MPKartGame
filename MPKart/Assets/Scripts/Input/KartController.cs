@@ -69,9 +69,7 @@ namespace Kart
             foreach (AxleInfo axleInfo in axleInfos) { 
                 HandleSteering(axleInfo, steering);
                 HandleMotor(axleInfo, motor);
-                //HandleBrakesAndDrift(axleInfo);
-                axleInfo.leftWheel.brakeTorque = 0;
-                axleInfo.rightWheel.brakeTorque = 0;
+                HandleBrakesAndDrift(axleInfo);
                 UpdateWheelVisuals(axleInfo.leftWheel);
                 UpdateWheelVisuals(axleInfo.rightWheel);
 
@@ -96,12 +94,16 @@ namespace Kart
         {
             if (axleInfo.motor)
             {
-                rb.constraints = RigidbodyConstraints.FreezeRotationX;
-                float newZ = Mathf.SmoothDamp(rb.linearVelocity.z, 0, ref brakeVelocity, 1f);
-                rb.linearVelocity = new Vector3(rb.linearVelocity.x, rb.linearVelocity.y, newZ);
+                if (input.IsBraking)
+                {
+                    rb.constraints = RigidbodyConstraints.FreezeRotationX;
+                    float newZ = Mathf.SmoothDamp(rb.linearVelocity.z, 0, ref brakeVelocity, 1f);
+                    rb.linearVelocity = new Vector3(rb.linearVelocity.x, rb.linearVelocity.y, newZ);
 
-                axleInfo.leftWheel.brakeTorque = brakeTorque;
-                axleInfo.rightWheel.brakeTorque = brakeTorque;
+                    axleInfo.leftWheel.brakeTorque = brakeTorque;
+                    axleInfo.rightWheel.brakeTorque = brakeTorque;
+                }
+                
             }
             else
             {

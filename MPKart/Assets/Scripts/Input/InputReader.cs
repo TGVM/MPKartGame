@@ -8,7 +8,7 @@ namespace Kart
     public class InputReader : ScriptableObject, InputSystem_Actions.IPlayerActions
     {
         public Vector3 Move => inputActions.Player.Move.ReadValue<Vector2>();
-        public bool Brake => inputActions.Player.Brake.ReadValue<float>() > 0;
+        public bool IsBraking => inputActions.Player.Brake.ReadValue<float>() > 0;
 
         InputSystem_Actions inputActions;
 

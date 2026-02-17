@@ -203,7 +203,7 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 0.85040283
       inSlope: 2
       outSlope: 2
       tangentMode: 0
@@ -211,8 +211,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 1
-      value: 1
+      time: 0.99728173
+      value: 0.30156478
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -222,7 +222,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  turnStrenght: 0
+  turnStrenght: 1500
   driftSteerMultiplier: 1.5
   brakeTorque: 10000
   centerOfMass: {fileID: 539275144903855023}
@@ -645,6 +645,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5865551652606104375}
     m_Modifications:
+    - target: {fileID: 2462922873585640712, guid: 65408f871178be0459f929b08c02c191, type: 3}
+      propertyPath: m_VersionIndex
+      value: 31
+      objectReference: {fileID: 0}
     - target: {fileID: 2462922873585640712, guid: 65408f871178be0459f929b08c02c191, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
       value: NaN
@@ -1392,6 +1396,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 578443754230959881}
     m_Modifications:
     - target: {fileID: 2462922873585640712, guid: 65408f871178be0459f929b08c02c191, type: 3}
+      propertyPath: m_VersionIndex
+      value: 31
+      objectReference: {fileID: 0}
+    - target: {fileID: 2462922873585640712, guid: 65408f871178be0459f929b08c02c191, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
       value: NaN
       objectReference: {fileID: 0}
@@ -2137,6 +2145,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8501062769834057215}
     m_Modifications:
+    - target: {fileID: 470127947778332314, guid: 17bdc7837e5a4594e85eea9d8dc4cbbd, type: 3}
+      propertyPath: m_VersionIndex
+      value: 28
+      objectReference: {fileID: 0}
     - target: {fileID: 470127947778332314, guid: 17bdc7837e5a4594e85eea9d8dc4cbbd, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
       value: NaN
@@ -2951,6 +2963,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2437112358590753661}
     m_Modifications:
+    - target: {fileID: 470127947778332314, guid: 17bdc7837e5a4594e85eea9d8dc4cbbd, type: 3}
+      propertyPath: m_VersionIndex
+      value: 28
+      objectReference: {fileID: 0}
     - target: {fileID: 470127947778332314, guid: 17bdc7837e5a4594e85eea9d8dc4cbbd, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
       value: NaN

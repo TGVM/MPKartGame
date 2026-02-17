@@ -3908,7 +3908,7 @@ PrefabInstance:
       objectReference: {fileID: 1935426497}
     - target: {fileID: 2234277359159785565, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_VersionIndex
-      value: 28
+      value: 34
       objectReference: {fileID: 0}
     - target: {fileID: 2234277359159785565, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
@@ -4604,7 +4604,7 @@ PrefabInstance:
       objectReference: {fileID: 816659179}
     - target: {fileID: 4193057553793965226, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_VersionIndex
-      value: 28
+      value: 34
       objectReference: {fileID: 0}
     - target: {fileID: 4193057553793965226, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
@@ -5290,14 +5290,6 @@ PrefabInstance:
       propertyPath: m_Tangents.Array.data[311].z
       value: NaN
       objectReference: {fileID: 0}
-    - target: {fileID: 4250745247853073151, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
-      propertyPath: turnStrenght
-      value: 1500
-      objectReference: {fileID: 0}
-    - target: {fileID: 4250745247853073151, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
-      propertyPath: maxMotorTorque
-      value: 3000
-      objectReference: {fileID: 0}
     - target: {fileID: 5902943077265151804, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_Mesh
       value: 
@@ -5308,7 +5300,7 @@ PrefabInstance:
       objectReference: {fileID: 1381083665}
     - target: {fileID: 5963746681216103099, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_VersionIndex
-      value: 25
+      value: 31
       objectReference: {fileID: 0}
     - target: {fileID: 5963746681216103099, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_Tangents.Array.data[125].x
@@ -6048,7 +6040,7 @@ PrefabInstance:
       objectReference: {fileID: 1394500767}
     - target: {fileID: 8558567998227286528, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_VersionIndex
-      value: 25
+      value: 31
       objectReference: {fileID: 0}
     - target: {fileID: 8558567998227286528, guid: 6d95e384abe00de44ac81d3881e7191a, type: 3}
       propertyPath: m_Tangents.Array.data[125].x

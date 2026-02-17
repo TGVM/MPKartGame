@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEditor.Rendering;
 using UnityEngine;
 
@@ -191,16 +192,46 @@ namespace Kart
 
                     axleInfo.leftWheel.brakeTorque = brakeTorque;
                     axleInfo.rightWheel.brakeTorque = brakeTorque;
+                    ApplyDriftFriction(axleInfo.leftWheel);
+                    ApplyDriftFriction(axleInfo.rightWheel);
                 }
-                
-            }
-            else
-            {
-                rb.constraints = RigidbodyConstraints.None;
+                else
+                {
+                    rb.constraints = RigidbodyConstraints.None;
 
-                axleInfo.leftWheel.brakeTorque = 0;
-                axleInfo.rightWheel.brakeTorque = 0;
+                    axleInfo.leftWheel.brakeTorque = 0;
+                    axleInfo.rightWheel.brakeTorque = 0;
+                    ResetDriftFriction(axleInfo.leftWheel);
+                    ResetDriftFriction(axleInfo.rightWheel);
+                }
             }
+        }
+
+        private void ResetDriftFriction(WheelCollider wheel)
+        {
+            AxleInfo axleInfo = axleInfos.FirstOrDefault(axle => axle.leftWheel == wheel || axle.rightWheel == wheel);
+            if (axleInfo == null) return;
+
+            wheel.forwardFriction = axleInfo.originalForwardFriction;
+            wheel.sidewaysFriction = axleInfo.originalSidewaysFriction;
+
+        }
+
+        private void ApplyDriftFriction(WheelCollider wheel)
+        {
+            if(wheel.GetGroundHit(out var hit))
+            {
+                wheel.forwardFriction = UpdateFriction(wheel.forwardFriction);
+                wheel.sidewaysFriction = UpdateFriction(wheel.sidewaysFriction);
+                IsGrounded = true;
+            }
+        }
+
+        private WheelFrictionCurve UpdateFriction(WheelFrictionCurve friction)
+        {
+            friction.stiffness = input.IsBraking ? Mathf.SmoothDamp(friction.stiffness,.5f, ref driftVelocity, Time.deltaTime * 2f) 
+                : 1f;
+            return friction;
         }
 
         private void HandleMotor(AxleInfo axleInfo, float motor)

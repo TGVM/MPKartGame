@@ -5,16 +5,17 @@ namespace Kart
 {
 
     [CreateAssetMenu(fileName = "InputReader", menuName = "Kart/Input Reader")]
-    public class InputReader : ScriptableObject, InputSystem_Actions.IPlayerActions
+    public class InputReader : ScriptableObject, InputSystem_Actions.IPlayerActions, IDrive
     {
-        public Vector3 Move => inputActions.Player.Move.ReadValue<Vector2>();
+        public Vector2 Move => inputActions.Player.Move.ReadValue<Vector2>();
         public bool IsBraking => inputActions.Player.Brake.ReadValue<float>() > 0;
 
         InputSystem_Actions inputActions;
 
         private void OnEnable()
         {
-            if (inputActions == null) { 
+            if (inputActions == null)
+            {
                 inputActions = new InputSystem_Actions();
                 inputActions.Player.SetCallbacks(this);
             }

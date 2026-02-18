@@ -1,5 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
 
@@ -45,7 +45,11 @@ namespace Kart
         [SerializeField] float bankSpeed = 2f;
 
         [Header("Refs")]
-        [SerializeField] InputReader input;
+        [SerializeField] InputReader playerInput;
+        [SerializeField] Circuit circuit;
+        [SerializeField] AIDriverData driverData;
+
+        IDrive input;
         Rigidbody rb;
 
         Vector3 kartVelocity;
@@ -61,6 +65,22 @@ namespace Kart
         public bool IsGrounded = true;
         public Vector3 Velocity => kartVelocity;
         public float MaxSpeed => maxSpeed;
+
+        private void Awake()
+        {
+            if(playerInput is IDrive driveInput)
+            {
+                input = driveInput;
+            }
+            else
+            {
+                Debug.Log("Using AI Input System.");
+                var aiInput = gameObject.GetOrAddComponent<AIInput>();
+                aiInput.AddDriverData(driverData);
+                aiInput.AddCircuit(circuit);
+                input = aiInput;
+            }
+        }
 
         private void Start()
         {

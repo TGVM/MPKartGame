@@ -120,7 +120,7 @@ GameObject:
   - component: {fileID: 4250745247853073151}
   - component: {fileID: 969089725337111170}
   m_Layer: 0
-  m_Name: Kart
+  m_Name: Lavender Kart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -139,9 +139,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1620753895045670000}
-  - {fileID: 1287308987473827149}
-  - {fileID: 8011628679535029076}
   - {fileID: 9043834833733519214}
   - {fileID: 7252526578381031652}
   - {fileID: 539275144903855023}
@@ -231,7 +228,9 @@ MonoBehaviour:
   lateralGScale: 10
   maxBankAngle: 5
   bankSpeed: 2
-  input: {fileID: 11400000, guid: 9cc115b5d77312d41afe88e629a39fc4, type: 2}
+  playerInput: {fileID: 0}
+  circuit: {fileID: 0}
+  driverData: {fileID: 0}
   IsGrounded: 1
 --- !u!65 &969089725337111170
 BoxCollider:
@@ -501,142 +500,6 @@ WheelCollider:
   m_LayerOverridePriority: 0
   m_Enabled: 1
   m_ProvidesContacts: 0
---- !u!1001 &1293846364806595483
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 6454796529670572594}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_Name
-      value: BlueberrySodaKart
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: -3966382381303944049, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-    - {fileID: 7869873546869171050, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
---- !u!4 &1620753895045670000 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6ad666f8903af77449e30518243ca82c, type: 3}
-  m_PrefabInstance: {fileID: 1293846364806595483}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &1609977258480956070
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 6454796529670572594}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_Name
-      value: BlueMartinaKart
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: -3966382381303944049, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-    - {fileID: 7869873546869171050, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
---- !u!4 &1287308987473827149 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5dcf0c9426604b1459e82cbfabc0bc85, type: 3}
-  m_PrefabInstance: {fileID: 1609977258480956070}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1738025435371534754
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2886,74 +2749,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 742179022197305318, guid: 17bdc7837e5a4594e85eea9d8dc4cbbd, type: 3}
   m_PrefabInstance: {fileID: 6072337612511863841}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &7540640595115052223
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 6454796529670572594}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_Name
-      value: GeorgiaPeachKart
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: -3966382381303944049, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-    - {fileID: 7869873546869171050, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
---- !u!4 &8011628679535029076 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: df61d2d6da66c4e4fb00a2b7bee2dfde, type: 3}
-  m_PrefabInstance: {fileID: 7540640595115052223}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8088498875596446874
 PrefabInstance:

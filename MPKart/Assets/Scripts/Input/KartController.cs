@@ -72,14 +72,10 @@ namespace Kart
             {
                 input = driveInput;
             }
-            else
-            {
-                Debug.Log("Using AI Input System.");
-                var aiInput = gameObject.GetOrAddComponent<AIInput>();
-                aiInput.AddDriverData(driverData);
-                aiInput.AddCircuit(circuit);
-                input = aiInput;
-            }
+        }
+        public void SetInput(IDrive input)
+        {
+            this.input = input;
         }
 
         private void Start()

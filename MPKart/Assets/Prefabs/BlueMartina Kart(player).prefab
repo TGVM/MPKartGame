@@ -120,7 +120,7 @@ GameObject:
   - component: {fileID: 4250745247853073151}
   - component: {fileID: 969089725337111170}
   m_Layer: 0
-  m_Name: BlueMartina Kart
+  m_Name: BlueMartina Kart(player)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

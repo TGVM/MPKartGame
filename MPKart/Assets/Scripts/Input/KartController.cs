@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
@@ -16,6 +19,37 @@ namespace Kart
         public WheelFrictionCurve originalForwardFriction;
         public WheelFrictionCurve originalSidewaysFriction;
     }
+
+    public struct InputPayload : INetworkSerializable
+    {
+        public int tick;
+        public Vector3 inputVector;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref tick);
+            serializer.SerializeValue(ref inputVector);
+        }
+    }
+
+    public struct StatePayload : INetworkSerializable
+    {
+        public int tick;
+        public Vector3 position;
+        public Quaternion rotation;
+        public Vector3 velocity;
+        public Vector3 angularVelocity;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref tick);
+            serializer.SerializeValue(ref position);
+            serializer.SerializeValue(ref rotation);
+            serializer.SerializeValue(ref velocity);
+            serializer.SerializeValue(ref angularVelocity);
+        }
+    }
+
 
     public class KartController : NetworkBehaviour
     {
@@ -70,6 +104,21 @@ namespace Kart
         public Vector3 Velocity => kartVelocity;
         public float MaxSpeed => maxSpeed;
 
+        //Netcode general
+        NetworkTimer timer;
+        const float k_serverTickRate = 60f; //60fps
+        const int k_bufferSize = 1024;
+
+        //Netcode client specific
+        CircularBuffer<StatePayload> clientStateBuffer;
+        CircularBuffer<InputPayload> clientInputBuffer;
+        StatePayload lastServerState;
+        StatePayload lastProcessedState;
+
+        //Netcode server specific
+        CircularBuffer<StatePayload> serverStateBuffer;
+        Queue<InputPayload> serverInputQueue;
+
         private void Awake()
         {
             if(playerInput is IDrive driveInput)
@@ -88,8 +137,14 @@ namespace Kart
             {
                 axleInfo.originalForwardFriction = axleInfo.leftWheel.forwardFriction;
                 axleInfo.originalSidewaysFriction = axleInfo.leftWheel.sidewaysFriction;
-
             }
+
+            timer = new NetworkTimer(k_serverTickRate);
+            clientStateBuffer = new CircularBuffer<StatePayload>(k_bufferSize);
+            clientInputBuffer = new CircularBuffer<InputPayload>(k_bufferSize);
+
+            serverStateBuffer = new CircularBuffer<StatePayload>(k_bufferSize);
+            serverInputQueue = new Queue<InputPayload>();
         }
         public void SetInput(IDrive input)
         {
@@ -109,19 +164,113 @@ namespace Kart
             playerAudioListener.enabled = true;
         }
 
+        private void Update()
+        {
+            timer.Update(Time.deltaTime);
+        }
         private void FixedUpdate()
+        {
+            if (!IsOwner) return;
+
+            while (timer.ShouldTick()) {
+                HandleClientTick();
+                HandleServerTick();
+            }
+        }
+
+        private void HandleServerTick()
+        {
+            var bufferIndex = -1;
+            while (serverInputQueue.Count > 0)
+            {
+                InputPayload inputPayload = serverInputQueue.Dequeue();
+
+                bufferIndex = inputPayload.tick % k_bufferSize;
+
+                StatePayload statePayload = SimulateMovement(inputPayload);
+                serverStateBuffer.Add(statePayload, bufferIndex);
+            }
+
+            if (bufferIndex == -1) return;
+            SendToClientRpc(serverStateBuffer.Get(bufferIndex));
+        }
+
+        private StatePayload SimulateMovement(InputPayload inputPayload)
+        {
+            Physics.simulationMode = SimulationMode.Script;
+
+            Move(inputPayload.inputVector);
+            Physics.Simulate(Time.fixedDeltaTime);
+            Physics.Simulate(Time.fixedDeltaTime);
+            Physics.simulationMode = SimulationMode.FixedUpdate;
+
+            return new StatePayload()
+            {
+                tick = inputPayload.tick,
+                position = transform.position,
+                rotation = transform.rotation,
+                velocity = rb.linearVelocity,
+                angularVelocity = rb.angularVelocity
+            };
+        }
+
+        [ClientRpc]
+        private void SendToClientRpc(StatePayload statePayload)
+        {
+            if (!IsOwner) return;
+
+            lastServerState = statePayload;
+        }
+
+        private void HandleClientTick()
+        {
+            if (!IsClient) return;
+
+            var currentTick = timer.CurrentTick;
+            var bufferIndex = currentTick % k_bufferSize;
+
+            InputPayload inputPayload = new InputPayload()
+            {
+                tick = currentTick,
+                inputVector = input.Move
+            };
+
+            clientInputBuffer.Add(inputPayload, bufferIndex);
+            SendToServerRpc(inputPayload);
+
+            StatePayload statePayload = ProcessMovement(inputPayload);
+            clientStateBuffer.Add(statePayload, bufferIndex);
+
+            //HandleServerReconciliation();
+        }
+
+        [ServerRpc]
+        private void SendToServerRpc(InputPayload inputPayload)
+        {
+            serverInputQueue.Enqueue(inputPayload);
+        }
+
+        StatePayload ProcessMovement(InputPayload input)
+        {
+            Move(input.inputVector);
+
+            return new StatePayload()
+            {
+                tick = input.tick,
+                position = transform.position,
+                rotation = transform.rotation,
+                velocity = rb.linearVelocity,
+                angularVelocity = rb.angularVelocity
+            };
+        }
+
+        void Move(Vector2 inputVector)
         {
             float verticalInput = AdjustInput(input.Move.y);
             float horizontalInput = AdjustInput(input.Move.x);
 
             float motor = maxMotorTorque * verticalInput;
             float steering = maxSteeringAngle * horizontalInput;
-
-            //Debug.Log("Motor: " + motor);
-            //Debug.Log("Steering: " + steering);
-            //Debug.Log("Vertical Input: " + verticalInput);
-            //Debug.Log("Horizontal Input: " + horizontalInput);
-
 
             UpdateAxles(motor, steering);
             UpdateBanking(horizontalInput);

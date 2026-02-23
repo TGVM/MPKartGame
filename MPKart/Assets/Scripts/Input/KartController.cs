@@ -119,6 +119,12 @@ namespace Kart
         CircularBuffer<StatePayload> serverStateBuffer;
         Queue<InputPayload> serverInputQueue;
 
+        [Header("Netcode")]
+        [SerializeField] float reconciliationThreshold = 10f;
+
+        [SerializeField] GameObject serverCube;
+        [SerializeField] GameObject clientCube;
+
         private void Awake()
         {
             if(playerInput is IDrive driveInput)
@@ -188,6 +194,10 @@ namespace Kart
                 bufferIndex = inputPayload.tick % k_bufferSize;
 
                 StatePayload statePayload = SimulateMovement(inputPayload);
+                serverCube.transform.position = new Vector3(
+                    statePayload.position.x,
+                    4,
+                    statePayload.position.z);
                 serverStateBuffer.Add(statePayload, bufferIndex);
             }
 
@@ -239,9 +249,70 @@ namespace Kart
             SendToServerRpc(inputPayload);
 
             StatePayload statePayload = ProcessMovement(inputPayload);
+            clientCube.transform.position = new Vector3(
+                statePayload.position.x,
+                4,
+                statePayload.position.z); 
             clientStateBuffer.Add(statePayload, bufferIndex);
 
-            //HandleServerReconciliation();
+            HandleServerReconciliation();
+        }
+
+        private void HandleServerReconciliation()
+        {
+            if (!ShouldReconcile()) return;
+
+            float positionError;
+            int bufferIndex;
+            StatePayload rewindState = default;
+
+            bufferIndex = lastServerState.tick % k_bufferSize;
+            if (bufferIndex - 1 < 0) return; //not enough info to reconcile
+
+            rewindState = IsHost ?
+                serverStateBuffer.Get(bufferIndex - 1) :
+                lastServerState; //host rpcs execute immediatelly, so we can use the last server state
+            positionError = Vector3.Distance(rewindState.position, clientStateBuffer.Get(bufferIndex).position);
+
+
+            if(positionError > reconciliationThreshold)
+            {
+                ReconcileState(rewindState);
+            }
+
+            lastProcessedState = lastServerState;
+
+        }
+
+        private void ReconcileState(StatePayload rewindState)
+        {
+            transform.position = rewindState.position;
+            transform.rotation = rewindState.rotation;
+            rb.linearVelocity = rewindState.velocity;
+            rb.angularVelocity = rewindState.angularVelocity;
+
+            if (!rewindState.Equals(lastServerState)) return;
+
+            clientStateBuffer.Add(rewindState, rewindState.tick);
+
+            //replay all inputs front the rewind state to the current state
+            int tickToReplay = lastServerState.tick;
+
+            while (tickToReplay < timer.CurrentTick) { 
+                int bufferIndex = tickToReplay % k_bufferSize;
+                StatePayload statePayload = ProcessMovement(clientInputBuffer.Get(bufferIndex));
+                clientStateBuffer.Add(statePayload, bufferIndex);
+                tickToReplay++;
+            }
+        }
+
+        private bool ShouldReconcile()
+        {
+            bool isNewServerState = !lastServerState.Equals(default);
+            bool isLastStateUndefinedOrDifferent = lastProcessedState
+                .Equals(default) || !lastProcessedState.Equals(lastServerState);
+
+            return isNewServerState && isLastStateUndefinedOrDifferent;
         }
 
         [ServerRpc]
@@ -307,7 +378,8 @@ namespace Kart
                 Vector3 forwardWithoutY = new Vector3(transform.forward.x,
                     0,
                     transform.forward.z).normalized;
-                rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, forwardWithoutY * targetSpeed, Time.deltaTime);              
+                float lerpFraction = timer.MinTimeBetweenTicks / (1f / Time.deltaTime);
+                rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, forwardWithoutY * targetSpeed, lerpFraction);
             }
 
             //Downforce

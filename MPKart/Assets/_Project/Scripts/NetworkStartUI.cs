@@ -10,6 +10,7 @@ namespace Kart {
         void Start() {
             startHostButton.onClick.AddListener(StartHost);
             startClientButton.onClick.AddListener(StartClient);
+            Debug.Log("Buttons set");
         }
         
         void StartHost() {

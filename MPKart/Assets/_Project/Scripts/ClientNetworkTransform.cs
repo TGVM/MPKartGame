@@ -2,13 +2,17 @@
 using UnityEngine;
 
 namespace Kart {
-    public enum AuthorityMode {
-        Server,
-        Client
-    }
+    
     
     [DisallowMultipleComponent]
     public class ClientNetworkTransform : NetworkTransform {
+
+        public enum AuthorityMode
+        {
+            Server,
+            Client
+        }
+
         public AuthorityMode authorityMode = AuthorityMode.Client;
 
         protected override bool OnIsServerAuthoritative() => authorityMode == AuthorityMode.Server;

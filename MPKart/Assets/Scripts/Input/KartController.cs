@@ -1,10 +1,11 @@
 ﻿using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor.Rendering;
+using Unity.Cinemachine;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Kart
 {
+
     [System.Serializable ]
     public class AxleInfo
     {
@@ -16,7 +17,7 @@ namespace Kart
         public WheelFrictionCurve originalSidewaysFriction;
     }
 
-    public class KartController : MonoBehaviour
+    public class KartController : NetworkBehaviour
     {
         [Header("Axle Information")]
         [SerializeField] AxleInfo[] axleInfos;
@@ -48,6 +49,9 @@ namespace Kart
         [SerializeField] InputReader playerInput;
         [SerializeField] Circuit circuit;
         [SerializeField] AIDriverData driverData;
+        [SerializeField] CinemachineCamera playerCamera;
+        [SerializeField] AudioListener playerAudioListener;
+
 
         IDrive input;
         Rigidbody rb;
@@ -72,25 +76,37 @@ namespace Kart
             {
                 input = driveInput;
             }
-        }
-        public void SetInput(IDrive input)
-        {
-            this.input = input;
-        }
 
-        private void Start()
-        {
+
             rb = GetComponent<Rigidbody>();
             input.Enable();
 
             rb.centerOfMass = centerOfMass.localPosition;
             originalCenterOfMass = centerOfMass.localPosition;
 
-            foreach (AxleInfo axleInfo in axleInfos) {
+            foreach (AxleInfo axleInfo in axleInfos)
+            {
                 axleInfo.originalForwardFriction = axleInfo.leftWheel.forwardFriction;
                 axleInfo.originalSidewaysFriction = axleInfo.leftWheel.sidewaysFriction;
 
             }
+        }
+        public void SetInput(IDrive input)
+        {
+            this.input = input;
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            if (!IsOwner)
+            {
+                playerAudioListener.enabled = false;
+                playerCamera.Priority = 0;
+                return;
+            }
+
+            playerCamera.Priority = 100;
+            playerAudioListener.enabled = true;
         }
 
         private void FixedUpdate()

@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
+using Utilities;
 
 namespace Kart
 {
@@ -23,18 +25,25 @@ namespace Kart
     public struct InputPayload : INetworkSerializable
     {
         public int tick;
+        public DateTime timestamp;
+        public ulong networkObjectId;
         public Vector3 inputVector;
+        public Vector3 position;
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref tick);
+            serializer.SerializeValue(ref timestamp);
+            serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref inputVector);
+            serializer.SerializeValue(ref position);
         }
     }
 
     public struct StatePayload : INetworkSerializable
     {
         public int tick;
+        public ulong networkObjectId;
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 velocity;
@@ -43,6 +52,7 @@ namespace Kart
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref tick);
+            serializer.SerializeValue(ref networkObjectId);
             serializer.SerializeValue(ref position);
             serializer.SerializeValue(ref rotation);
             serializer.SerializeValue(ref velocity);
@@ -86,9 +96,29 @@ namespace Kart
         [SerializeField] CinemachineCamera playerCamera;
         [SerializeField] AudioListener playerAudioListener;
 
+        [Header("Netcode")]
+        [SerializeField] float reconciliationCooldownTime = 1f;
+        [SerializeField] float reconciliationThreshold = 10f;
+        [SerializeField] float extrapolationLimit = 0.5f;   //500ms
+        [SerializeField] float extrapolationMultiplier = 1.2f;
+        [SerializeField] GameObject serverCube;
+        [SerializeField] GameObject clientCube;
+
+        StatePayload extrapolationState;
+        CountdownTimer extrapolationCooldown;
+
+        CountdownTimer reconciliationCooldown;
+
+        [Header("NetcodeDebug")]
+        [SerializeField] TextMeshProUGUI networkStatusText;
+        [SerializeField] TextMeshProUGUI playerStatusText;
+        [SerializeField] TextMeshProUGUI serverRpcDebugText;
+        [SerializeField] TextMeshProUGUI clientRpcDebugText;
+
 
         IDrive input;
         Rigidbody rb;
+        ClientNetworkTransform clientNetworkTransform;
 
         Vector3 kartVelocity;
         float brakeVelocity;
@@ -119,11 +149,6 @@ namespace Kart
         CircularBuffer<StatePayload> serverStateBuffer;
         Queue<InputPayload> serverInputQueue;
 
-        [Header("Netcode")]
-        [SerializeField] float reconciliationThreshold = 10f;
-
-        [SerializeField] GameObject serverCube;
-        [SerializeField] GameObject clientCube;
 
         private void Awake()
         {
@@ -134,6 +159,7 @@ namespace Kart
 
 
             rb = GetComponent<Rigidbody>();
+            clientNetworkTransform = GetComponent<ClientNetworkTransform>();
             input.Enable();
 
             rb.centerOfMass = centerOfMass.localPosition;
@@ -151,7 +177,37 @@ namespace Kart
 
             serverStateBuffer = new CircularBuffer<StatePayload>(k_bufferSize);
             serverInputQueue = new Queue<InputPayload>();
+
+            reconciliationCooldown = new CountdownTimer(reconciliationCooldownTime);
+            extrapolationCooldown = new CountdownTimer(extrapolationLimit);
+
+            reconciliationCooldown.OnTimerStart += () =>
+            {
+                extrapolationCooldown.Stop();
+            };
+
+            extrapolationCooldown.OnTimerStart += () =>
+            {
+                reconciliationCooldown.Stop();
+                SwitchAuthorityMode(ClientNetworkTransform.AuthorityMode.Server); 
+            };
+
+            extrapolationCooldown.OnTimerStop += () =>
+            {
+                extrapolationState = default;
+                SwitchAuthorityMode(ClientNetworkTransform.AuthorityMode.Client);
+            };
         }
+
+        void SwitchAuthorityMode(ClientNetworkTransform.AuthorityMode mode)
+        {
+            clientNetworkTransform.authorityMode = mode;
+            bool shouldSync = mode == ClientNetworkTransform.AuthorityMode.Client;
+            clientNetworkTransform.SyncPositionX = false;
+            clientNetworkTransform.SyncPositionY = false;
+            clientNetworkTransform.SyncPositionZ = false;
+        }
+
         public void SetInput(IDrive input)
         {
             this.input = input;
@@ -166,6 +222,10 @@ namespace Kart
                 return;
             }
 
+            networkStatusText.SetText($"Player {NetworkManager.LocalClientId} Host: {NetworkManager.IsHost} Server: {IsServer} Client: {IsClient}");
+            if (!IsServer) serverRpcDebugText.SetText("Not Server");
+            if (!IsClient) clientRpcDebugText.SetText("Not Client");
+
             playerCamera.Priority = 100;
             playerAudioListener.enabled = true;
         }
@@ -173,27 +233,38 @@ namespace Kart
         private void Update()
         {
             timer.Update(Time.deltaTime);
+            reconciliationCooldown.Tick(Time.deltaTime);
+            extrapolationCooldown.Tick(Time.deltaTime);
+
+            playerStatusText.SetText($"Owner: {IsOwner} Network ObjectId: {NetworkObjectId} Velocity: {kartVelocity.magnitude:F1}");
+
+            Extrapolate();
         }
+
         private void FixedUpdate()
         {
-            if (!IsOwner) return;
 
             while (timer.ShouldTick()) {
                 HandleClientTick();
                 HandleServerTick();
             }
+
+            Extrapolate();
         }
 
         private void HandleServerTick()
         {
+            if (!IsServer) return;
+
             var bufferIndex = -1;
+            InputPayload inputPayload = default;
             while (serverInputQueue.Count > 0)
             {
-                InputPayload inputPayload = serverInputQueue.Dequeue();
+                inputPayload = serverInputQueue.Dequeue();
 
                 bufferIndex = inputPayload.tick % k_bufferSize;
 
-                StatePayload statePayload = SimulateMovement(inputPayload);
+                StatePayload statePayload = ProcessMovement(inputPayload);
                 serverCube.transform.position = new Vector3(
                     statePayload.position.x,
                     4,
@@ -203,9 +274,47 @@ namespace Kart
 
             if (bufferIndex == -1) return;
             SendToClientRpc(serverStateBuffer.Get(bufferIndex));
+            HandleExtrapolation(serverStateBuffer.Get(bufferIndex), CalculateLatencyInMillis(inputPayload));
         }
 
-        private StatePayload SimulateMovement(InputPayload inputPayload)
+        void Extrapolate()
+        {
+            if(IsServer && extrapolationCooldown.IsRunning)
+            {
+                transform.position += new Vector3(extrapolationState.position.x,
+                    0,
+                    extrapolationState.position.z);
+            }
+        }
+
+        private void HandleExtrapolation(StatePayload latestState, float latency)
+        {
+            if(ShouldExtrapolate(latency))
+            {
+                float axisLenght = latency * latestState.angularVelocity.magnitude * Mathf.Rad2Deg;
+                Quaternion angularRotation = Quaternion.AngleAxis(axisLenght, latestState.angularVelocity);
+                if(extrapolationState.position != default)
+                {
+                    latestState = extrapolationState;
+                }
+
+                var posAdjustment = latestState.velocity * (1+latency*extrapolationMultiplier);
+                extrapolationState.position = posAdjustment;
+                extrapolationState.rotation = angularRotation * latestState.rotation;
+                extrapolationState.velocity = latestState.velocity;
+                extrapolationState.angularVelocity = latestState.angularVelocity;
+                extrapolationCooldown.Start();
+            }
+            else
+            {
+                extrapolationCooldown.Stop();
+
+            }
+        }
+
+        bool ShouldExtrapolate(float latency) => latency < extrapolationLimit && latency > Time.fixedDeltaTime;
+
+        /*private StatePayload SimulateMovement(InputPayload inputPayload)
         {
             Physics.simulationMode = SimulationMode.Script;
 
@@ -222,11 +331,19 @@ namespace Kart
                 velocity = rb.linearVelocity,
                 angularVelocity = rb.angularVelocity
             };
+        }*/
+
+        static float CalculateLatencyInMillis(InputPayload input)
+        {
+            return (DateTime.Now - input.timestamp).Milliseconds / 1000f;
         }
+
 
         [ClientRpc]
         private void SendToClientRpc(StatePayload statePayload)
         {
+            clientRpcDebugText.SetText($"Received state from server Tick {statePayload.tick} Server POS: {statePayload.position}");
+
             if (!IsOwner) return;
 
             lastServerState = statePayload;
@@ -234,7 +351,7 @@ namespace Kart
 
         private void HandleClientTick()
         {
-            if (!IsClient) return;
+            if (!IsClient || !IsOwner) return;
 
             var currentTick = timer.CurrentTick;
             var bufferIndex = currentTick % k_bufferSize;
@@ -242,7 +359,10 @@ namespace Kart
             InputPayload inputPayload = new InputPayload()
             {
                 tick = currentTick,
-                inputVector = input.Move
+                timestamp = DateTime.Now,
+                networkObjectId = NetworkObjectId,
+                inputVector = input.Move,
+                position = transform.position
             };
 
             clientInputBuffer.Add(inputPayload, bufferIndex);
@@ -278,9 +398,10 @@ namespace Kart
             if(positionError > reconciliationThreshold)
             {
                 ReconcileState(rewindState);
+                reconciliationCooldown.Start();
             }
 
-            lastProcessedState = lastServerState;
+            lastProcessedState = rewindState;
 
         }
 
@@ -312,12 +433,14 @@ namespace Kart
             bool isLastStateUndefinedOrDifferent = lastProcessedState
                 .Equals(default) || !lastProcessedState.Equals(lastServerState);
 
-            return isNewServerState && isLastStateUndefinedOrDifferent;
+            return isNewServerState && isLastStateUndefinedOrDifferent
+                && !reconciliationCooldown.IsRunning && !extrapolationCooldown.IsRunning;
         }
 
         [ServerRpc]
         private void SendToServerRpc(InputPayload inputPayload)
         {
+            serverRpcDebugText.SetText($"Received input from client Tick: {inputPayload.tick} Client POS: {inputPayload.position}");
             serverInputQueue.Enqueue(inputPayload);
         }
 
@@ -328,6 +451,7 @@ namespace Kart
             return new StatePayload()
             {
                 tick = input.tick,
+                networkObjectId = input.networkObjectId,
                 position = transform.position,
                 rotation = transform.rotation,
                 velocity = rb.linearVelocity,
@@ -378,8 +502,7 @@ namespace Kart
                 Vector3 forwardWithoutY = new Vector3(transform.forward.x,
                     0,
                     transform.forward.z).normalized;
-                float lerpFraction = timer.MinTimeBetweenTicks / (1f / Time.deltaTime);
-                rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, forwardWithoutY * targetSpeed, lerpFraction);
+                rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, forwardWithoutY * targetSpeed, timer.MinTimeBetweenTicks);
             }
 
             //Downforce
@@ -500,8 +623,9 @@ namespace Kart
         {
             if (axleInfo.steering)
             {
-                axleInfo.leftWheel.steerAngle = steering;
-                axleInfo.rightWheel.steerAngle = steering;
+                float steeringMultiplier = input.IsBraking ? driftSteerMultiplier : 1f;
+                axleInfo.leftWheel.steerAngle = steering * steeringMultiplier;
+                axleInfo.rightWheel.steerAngle = steering * steeringMultiplier;
             }
         }
 
